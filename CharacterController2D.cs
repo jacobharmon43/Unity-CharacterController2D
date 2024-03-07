@@ -44,7 +44,8 @@ public class CharacterController2D : MonoBehaviour {
 
 	private void Awake() {
 		_bc = GetComponent<BoxCollider2D>();
-		halfScaleMinusSkin =  transform.localScale / 2 - Vector3.one * _skinWidth;
+		Vector2 scale = new Vector2(_bc.size.x * transform.localScale.x, _bc.size.y * transform.localScale.y);
+		halfScaleMinusSkin =  scale / 2 - Vector2.one * _skinWidth;
 	}
 
 	public void Move(Vector3 delta) {
@@ -87,8 +88,8 @@ public class CharacterController2D : MonoBehaviour {
 		Vector3 center = transform.position;
 		Vector3 directionToUse = (direction == Direction.Right || direction == Direction.Left) ? Vector3.right : Vector3.up;
 		delta.Scale(directionToUse);
-		float distX = transform.localScale.x/2;
-		float distY = transform.localScale.y/2;
+		float distX = (_bc.size.x * transform.localScale.x)/2;
+		float distY = (_bc.size.y * transform.localScale.y)/2;
 		float inwardOffset = 0.05f; // Arbitrary offset value, squeezes the between points for the raycasts in ever so slightly to avoid corner cases when hugging surfaces.
 		LayerMask layers = _collisionLayer;
 		if (direction == Direction.Bottom) {
