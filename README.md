@@ -1,5 +1,8 @@
 # Unity2DCharacterController
-A simple character controller to handle moving objects with collisions in unity.
+A simple rigid character controller for Unity written in C# that doesn't use physics.
+Has a very similar API to the CharacterController for Unity3D
+
+Does not handle triggers or anything else, that is on the end user to implement in their own way. Its very easy to do, I just don't want to clutter this code if possible.
 
 Usecase:
 Lots of Character Controllers I find online are over the top and complicated. Or rely on built in Unity Physics.
