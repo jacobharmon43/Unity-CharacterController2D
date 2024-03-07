@@ -1,66 +1,85 @@
 using UnityEngine;
+using System.Collections.Generic;
+
+public class CollisionData {
+	public DirectionalCollision top, bottom, left, right;
+	public CollisionData() {top = new(); bottom = new(); left = new(); right = new();}
+	public override string ToString() {
+    return $"Top: {top}, Bottom: {bottom}, Left: {left}, Right: {right}";
+  }
+}
+
+public class DirectionalCollision {
+	public bool hit;
+	public Vector3 location;
+	public Transform obj;
+	public DirectionalCollision() {hit = false; location = Vector3.zero;}
+	public DirectionalCollision(bool hit, Vector3 location, Transform t) { this.hit = hit; this.location = location; this.obj = t; }
+	public override string ToString() {
+    return $"Hit: {hit}, Location: {location}";
+  }
+	public static implicit operator bool(DirectionalCollision obj) {
+		return obj.hit;
+	}
+}
+
+public enum Direction {Right, Left, Top, Bottom}
 
 /// <summary>
 /// Character controller 2D class currently only supports square colliders.
 /// Expansion to more complicated colliders would be possible, but would probably be
 /// better with just basic rigidbody physics.
 /// </summary>
-[RequireComponent(typeof(BoxCollider2D))]
 public class CharacterController2D : MonoBehaviour {
 
 	[SerializeField] private int _numRaycastsPerEdge = 4;
-	[SerializeField] private LayerMask _collisionLayer;
+	[SerializeField] private LayerMask _collisionLayer = LayerMask.GetMask();
+	[SerializeField] private LayerMask _platformLayer = LayerMask.GetMask();
 	[SerializeField] private float _skinWidth = 0.1f;
-
-	class CollisionData {
-		public DirectionalCollision top, bottom, left, right;
-		public CollisionData() {top = new(); bottom = new(); left = new(); right = new();}
-	}
-
-	class DirectionalCollision {
-		public bool hit;
-		public Vector3 location;
-		public DirectionalCollision() {hit = false; location = Vector3.zero;}
-		public DirectionalCollision(bool hit, Vector3 location) {this.hit = hit; this.location = location;}
-	}
-
-	enum Direction {Right, Left, Top, Bottom}
 
 	private CollisionData _data = new();
 	private BoxCollider2D _bc;
+	Vector3 halfScaleMinusSkin;
+
 
 	private void Awake() {
 		_bc = GetComponent<BoxCollider2D>();
+		halfScaleMinusSkin =  transform.localScale / 2 - Vector3.one * _skinWidth;
 	}
 
 	public void Move(Vector3 delta) {
 		Vector3 newPos = transform.position + delta;
 		_data = CheckCollisions(delta);
-		Vector3 halfScaleMinusSkin =  transform.localScale / 2 - Vector3.one * _skinWidth;
-		if (_data.right.hit) {
-			newPos.x = _data.right.location.x - halfScaleMinusSkin.x;
-		} else if (_data.left.hit) {
-			newPos.x = _data.left.location.x + halfScaleMinusSkin.x;
-		}
-		if (_data.top.hit) {
-			newPos.y = _data.top.location.y - halfScaleMinusSkin.y;
-		} else if (_data.bottom.hit) {
-			newPos.y = _data.bottom.location.y + halfScaleMinusSkin.y;
-		}
+		HandleVerticalMovement(ref newPos, delta.y);
+		HandleHorizontalMovement(ref newPos, delta.x);
 		transform.position = newPos;
 	}
 
+	private void HandleHorizontalMovement(ref Vector3 newPos, float delta) {
+		if (_data.right.hit && delta > 0) {
+			newPos.x = _data.right.location.x - halfScaleMinusSkin.x;
+		} else if (_data.left.hit && delta < 0) {
+			newPos.x = _data.left.location.x + halfScaleMinusSkin.x;
+		}
+	}
+
+	private void HandleVerticalMovement(ref Vector3 newPos, float delta) {
+		if (_data.top.hit && delta > 0) {
+			newPos.y = _data.top.location.y - halfScaleMinusSkin.y;
+		} else if (_data.bottom.hit && delta < 0) {
+			newPos.y = _data.bottom.location.y + halfScaleMinusSkin.y;
+		}
+	}
+
 	private CollisionData CheckCollisions(Vector3 delta) {
-		CollisionData data = new();
-		if (delta.x > 0)
-			data.right = CheckCollision(Direction.Right, delta);
-		if (delta.x < 0)
-			data.left = CheckCollision(Direction.Left, delta);
-		if (delta.y > 0)
-			data.top =  CheckCollision(Direction.Top, delta);
-		if (delta.y < 0)
-			data.bottom = CheckCollision(Direction.Bottom, delta);
-		return data;
+        CollisionData data = new()
+        {
+            right = CheckCollision(Direction.Right, delta),
+            left = CheckCollision(Direction.Left, delta),
+            top = CheckCollision(Direction.Top, delta),
+            bottom = CheckCollision(Direction.Bottom, delta)
+        };
+        return data;
 	}
 
 	private DirectionalCollision CheckCollision(Direction direction, Vector3 delta) {
@@ -70,7 +89,11 @@ public class CharacterController2D : MonoBehaviour {
 		delta.Scale(directionToUse);
 		float distX = transform.localScale.x/2;
 		float distY = transform.localScale.y/2;
-		float inwardOffset = 0.01f; // Arbitrary value, avoids detecting other direction collisions when directly pressed into a surface
+		float inwardOffset = 0.05f; // Arbitrary offset value, squeezes the between points for the raycasts in ever so slightly to avoid corner cases when hugging surfaces.
+		LayerMask layers = _collisionLayer;
+		if (direction == Direction.Bottom) {
+			layers |= _platformLayer;
+		}
 		switch(direction) {
 			case Direction.Right:
 				originA = center + new Vector3(distX - _skinWidth, distY - _skinWidth - inwardOffset);
@@ -96,17 +119,19 @@ public class CharacterController2D : MonoBehaviour {
 		Vector3[] startingPositions = new Vector3[_numRaycastsPerEdge];
 		for (int i = 0; i < _numRaycastsPerEdge; i++) {
 			float t = i / (_numRaycastsPerEdge - 1.0f);
-			startingPositions[i] = Vector3.Lerp(originB, originA, t);
+			startingPositions[i] = Vector3.Lerp(originA, originB, t);
 		}
 		foreach (Vector3 startingPos in startingPositions) {
-			RaycastHit2D hit = Physics2D.Linecast(startingPos, startingPos+delta, _collisionLayer);
+			RaycastHit2D hit = Physics2D.Linecast(startingPos, startingPos+delta, layers);
 			if (hit) {
-				return new(true, hit.point);
+				return new(true, hit.point, hit.transform);
 			}
 		}
 		return new();
 	}
 
-	public bool IsGrounded => _data.bottom.hit;
-	public bool TopCollision => _data.top.hit;
+	public DirectionalCollision IsGrounded => _data.bottom;
+	public DirectionalCollision TopCollision => _data.top;
+	public DirectionalCollision LeftWall => _data.left;
+	public DirectionalCollision RightWall => _data.right;
 }
