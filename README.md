@@ -42,8 +42,6 @@ CharacterController2D.Move() is realistically the only function you'll interface
 So you call _cc.Move( MOVEMENT_VECTOR ) and thats it.
 
 Things Id Like to do but havent because my project didn't call for it
-- [ ] Slope support
 - [ ] Different Collider Shape support
-- [ ] Modular platform / Slope code attachment so theyre a bit less intertwined (ie the Platform code is a part of its own attachable module to the CharacterController2D rather than a part of the base class, or perhaps its some kind of override)
 
 Feel free to use however, change however. I'd enjoy if anyone who uses it also creates a pull request with additional changes or features, just so I can see them. It would be cool.
