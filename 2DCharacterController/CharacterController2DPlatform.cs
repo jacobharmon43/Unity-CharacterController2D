@@ -9,7 +9,7 @@ public class CharacterController2DPlatform : MonoBehaviour, ICharacterController
     }
 
     public void AdjustMovement(ref Vector2 newPos, Vector2 delta) {
-        _collisions.Recaclulate(delta, _platformMask);
+        _collisions.Recalculate(delta, _platformMask);
         HandleVerticalMovement(ref newPos, delta.y);
     }
 

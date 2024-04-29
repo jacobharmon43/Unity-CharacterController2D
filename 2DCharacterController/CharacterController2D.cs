@@ -17,7 +17,7 @@ public class CharacterController2D : MonoBehaviour {
 	
 	public void Move(Vector2 delta) {
 		Vector2 newPos = (Vector2)transform.position + delta;
-		_collisions.Recaclulate(delta, _collisionLayer);
+		_collisions.Recalculate(delta, _collisionLayer);
 		MoveInSpace.HandleHorizontalMovement(ref newPos, delta.x, _collisions);
 		MoveInSpace.HandleVerticalMovement(ref newPos, delta.y, _collisions);
 		foreach (var controllerExtension in GetComponents<ICharacterControllerExtension>()) {

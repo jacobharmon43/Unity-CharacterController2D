@@ -11,7 +11,7 @@ public class CharacterController2DSlope : MonoBehaviour, ICharacterControllerExt
 
     public void AdjustMovement(ref Vector2 newPos, Vector2 delta) {
         if (delta.x == 0) return;
-        _collisions.Recaclulate(delta, _slopeLayer);
+        _collisions.Recalculate(delta, _slopeLayer);
         Collision slope =  delta.x > 0 ? _collisions.Data.right : _collisions.Data.left;
         if (!slope) return;
         float angle = Vector2.Angle(slope.normal.normalized, Vector2.up);

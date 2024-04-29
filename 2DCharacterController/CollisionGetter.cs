@@ -63,7 +63,7 @@ public class CollisionGetter : MonoBehaviour {
     };
   } 
 
-  public void Recaclulate(Vector2 delta, LayerMask mask) {
+  public void Recalculate(Vector2 delta, LayerMask mask) {
     Data = new CollisionData(){
       above = CheckCollision(Direction.Top, delta, mask),
       below = CheckCollision(Direction.Bottom, delta, mask),
