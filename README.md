@@ -43,5 +43,6 @@ So you call _cc.Move( MOVEMENT_VECTOR ) and thats it.
 
 Things Id Like to do but havent because my project didn't call for it
 - [ ] Different Collider Shape support
+- [ ] Slope extension is a bit buggy, look into some edge cases for steeper slope traversal
 
 Feel free to use however, change however. I'd enjoy if anyone who uses it also creates a pull request with additional changes or features, just so I can see them. It would be cool.
